@@ -1,48 +1,24 @@
 #!/usr/bin/env python
 '''
-!> \file
-!> \author David Ladd
-!> \brief Main program file to simulate cardiac ECC using opencmiss
-!>
-!> \section LICENSE
-!>
-!> Version: MPL 1.1/GPL 2.0/LGPL 2.1
-!>
-!> The contents of this file are subject to the Mozilla Public License
-!> Version 1.1 (the "License"); you may not use this file except in
-!> compliance with the License. You may obtain a copy of the License at
-!> http://www.mozilla.org/MPL/
-!>
-!> Software distributed under the License is distributed on an "AS IS"
-!> basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-!> License for the specific language governing rights and limitations
-!> under the License.
-!>
-!> The Original Code is OpenCMISS
-!>
-!> The Initial Developer of the Original Code is University of Auckland,
-!> Auckland, New Zealand and University of Oxford, Oxford, United
-!> Kingdom. Portions created by the University of Auckland and University
-!> of Oxford are Copyright (C) 2007 by the University of Auckland and
-!> the University of Oxford. All Rights Reserved.
-!>
-!> Contributor(s): Vijay Rajagopal
-!>
-!> Alternatively, the contents of this file may be used under the terms of
-!> either the GNU General Public License Version 2 or later (the "GPL"), or
-!> the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-!> in which case the provisions of the GPL or the LGPL are applicable instead
-!> of those above. If you wish to allow use of your version of this file only
-!> under the terms of either the GPL or the LGPL, and not to allow others to
-!> use your version of this file under the terms of the MPL, indicate your
-!> decision by deleting the provisions above and replace them with the notice
-!> and other provisions required by the GPL or the LGPL. If you do not delete
-!> the provisions above, a recipient may use your version of this file under
-!> the terms of any one of the MPL, the GPL or the LGPL.
-!>
+Author: David Ladd
+
+Brief: Main program file to simulate calcium release from RyR clusters using OpenCMISS
+
+Copyright 2019 David Ladd, University of Melbourne
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 '''
 
-# Add Python bindings directory to PATH
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
@@ -75,20 +51,21 @@ def download_file(local_file, url):
 C O N T R O L    P A N E L
 ======================================================
 """
-# Solve time data (ms)
+# Solve time (ms)
 startTime = 0.0
 endTime = 30.00001
 pdeTimestep = 0.1
 odeTimestep = 0.0001
 outputFrequency = 10
-# Mesh data
-meshDir = './input/'
+# Input and output directories
+inputDir = './input/'
+outputDir = './output/'
+# Specify model type
 lowRyrDensity = True
 mitochondria = False
 # The CellML model file to use
-cellmlFile = meshDir + 'ryrNtroponinNfluo3_wryrscaling_wtimelag_wtimecourse.xml'
+cellmlFile = inputDir + 'ryrNtroponinNfluo3_wryrscaling_wtimelag_wtimecourse.xml'
 iCa = 2.0e-15
-
 # Initial conditions
 initCa = 0.1
 initF = 22.92
@@ -111,7 +88,7 @@ diffATPCa = [0.14, 0.14, 0.14]
 """
 
 # G e t   m e s h   r e s o u r c e s
-# ----------------------------------------------------
+# -----------------------------------
 resourceLinks = {
     "Combined_8Sarc_1319kNodes_node.h5" : "https://www.dropbox.com/s/mid02d7u8anpll4/Combined_8Sarc_1319kNodes_node.h5?dl=1",
     "Combined_8Sarc_1319kNodes_elem.h5" : "https://www.dropbox.com/s/nkx1z7n3woh75a9/Combined_8Sarc_1319kNodes_elem.h5?dl=1",
@@ -138,21 +115,28 @@ else:
 
 # Download node file if it doesn't already exist
 fileName = meshName + 'node.h5'
-nodeFile = meshDir + fileName
+nodeFile = inputDir + fileName
 if not os.path.exists(nodeFile):
     download_file(nodeFile, resourceLinks[fileName])
 
 # Download elem file if it doesn't already exist
 fileName = meshName + 'elem.h5'
-elemFile = meshDir + fileName
+elemFile = inputDir + fileName
 if not os.path.exists(elemFile):
     download_file(elemFile, resourceLinks[fileName])
 
 # Download ryr file if it doesn't already exist
-ryrFile = meshDir + ryrName
+ryrFile = inputDir + ryrName
 if not os.path.exists(ryrFile):
     download_file(ryrFile, resourceLinks[ryrName])
 
+# O u t p u t   d i r e c t o r y
+# -------------------------------
+try:
+    os.makedirs(outputDir)
+except OSError as e:
+    if e.errno != 17:
+        raise
 
 # P r o b l e m    S e t u p
 # ----------------------------------------------------
