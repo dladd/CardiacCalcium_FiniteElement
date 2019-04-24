@@ -25,6 +25,7 @@ Python modules used in this project:
 * [SciPy](https://www.scipy.org/)
 * [pandas](https://pandas.pydata.org/)
 * [Requests](http://docs.python-requests.org/en/master/)
+* [mpi4py](https://mpi4py.readthedocs.io/en/stable/)
 * [gc](https://docs.python.org/3/library/gc.html)
 * [time](https://docs.python.org/3/library/time.html)
 * [os](https://docs.python.org/3/library/os.html)

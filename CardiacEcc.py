@@ -28,6 +28,7 @@ import requests
 import shutil
 import os
 from opencmiss.iron import iron
+from mpi4py import MPI
 
 # C l a s s e s   a n d    F u n c t i o n s 
 # ----------------------------------------------------
@@ -86,6 +87,11 @@ diffATPCa = [0.14, 0.14, 0.14]
 """
 ======================================================
 """
+# Get the computational node information
+numberOfComputationalNodes = iron.ComputationalNumberOfNodesGet()
+computationalNodeNumber = iron.ComputationalNodeNumberGet()
+userNumber = numberIncrementor()
+comm = MPI.COMM_WORLD
 
 # G e t   m e s h   r e s o u r c e s
 # -----------------------------------
@@ -116,34 +122,43 @@ else:
 # Download node file if it doesn't already exist
 fileName = meshName + 'node.h5'
 nodeFile = inputDir + fileName
-if not os.path.exists(nodeFile):
-    download_file(nodeFile, resourceLinks[fileName])
+if computationalNodeNumber == 0:
+    print('Checking for node file...')
+    if not os.path.exists(nodeFile):
+        print('Downloading node file to input directory...')
+        download_file(nodeFile, resourceLinks[fileName])
 
 # Download elem file if it doesn't already exist
 fileName = meshName + 'elem.h5'
 elemFile = inputDir + fileName
-if not os.path.exists(elemFile):
-    download_file(elemFile, resourceLinks[fileName])
+if computationalNodeNumber == 0:
+    print('Checking for element file...')
+    if not os.path.exists(elemFile):
+        print('Downloading element file to input directory...')
+        download_file(elemFile, resourceLinks[fileName])
 
 # Download ryr file if it doesn't already exist
 ryrFile = inputDir + ryrName
-if not os.path.exists(ryrFile):
-    download_file(ryrFile, resourceLinks[ryrName])
+if computationalNodeNumber == 0:
+    print('Checking for RyR file...')
+    if not os.path.exists(ryrFile):
+        print('Downloading RyR file to input directory...')
+        download_file(ryrFile, resourceLinks[ryrName])
 
 # O u t p u t   d i r e c t o r y
 # -------------------------------
-try:
-    os.makedirs(outputDir)
-except OSError as e:
-    if e.errno != 17:
-        raise
+if computationalNodeNumber == 0:
+    try:
+        os.makedirs(outputDir)
+    except OSError as e:
+        if e.errno != 17:
+            raise
+
+# Let rank 0 catch up if it has been busy downloading
+comm.Barrier()
 
 # P r o b l e m    S e t u p
 # ----------------------------------------------------
-# Get the computational node information
-numberOfComputationalNodes = iron.ComputationalNumberOfNodesGet()
-computationalNodeNumber = iron.ComputationalNodeNumberGet()
-userNumber = numberIncrementor()
 if computationalNodeNumber == 0:
     print('Setting up problem...')
 
