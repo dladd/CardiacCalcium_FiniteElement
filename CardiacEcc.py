@@ -40,10 +40,23 @@ class numberIncrementor:
         self.__value += 1
         return self.__value
 
-def download_file(local_file, url):
+def download_file(local_file, targetDir):
     """Download the local_file from the URL"""
+    resourceLinks = {
+        "Combined_8Sarc_1319kNodes_node.h5" : "https://melbourne.figshare.com/ndownloader/files/15045695",
+        "Combined_8Sarc_1319kNodes_elem.h5" : "https://melbourne.figshare.com/ndownloader/files/15045677",
+        "Combined_8Sarc_1436kNodes_elem.h5" : "https://melbourne.figshare.com/ndownloader/files/15045683",
+        "Combined_8Sarc_1436kNodes_node.h5" : "https://melbourne.figshare.com/ndownloader/files/15045701",
+        "Cyto_8Sarc_1319kNodes_elem.h5" : "https://melbourne.figshare.com/ndownloader/files/15045707",
+        "Cyto_8Sarc_1319kNodes_node.h5" : "https://melbourne.figshare.com/ndownloader/files/15045710",
+        "Cyto_8Sarc_1436kNodes_elem" : "https://melbourne.figshare.com/ndownloader/files/15045713",
+        "Cyto_8Sarc_1436kNodes_node.h5" : "https://melbourne.figshare.com/ndownloader/files/15045716",
+        "Cyto_8Sarc_1319kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N50_1umSpacing_tausimnum_1.mat" : "https://melbourne.figshare.com/ndownloader/files/15045719",
+        "Cyto_8Sarc_1436kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N123_tausimnum_1.mat" : "https://melbourne.figshare.com/ndownloader/files/15045722"
+    }
+    url = resourceLinks[local_file]
     r = requests.get(url, stream=True)
-    with open(local_file, 'wb') as f:
+    with open(targetDir + local_file, 'wb') as f:
         shutil.copyfileobj(r.raw, f)
 
 
@@ -64,7 +77,7 @@ outputDir = './output/'
 # Specify model type
 lowRyrDensity = True
 mitochondria = False
-# The CellML model file to use
+# The CellML model file to use to describe the calcium source terms
 cellmlFile = inputDir + 'ryrNtroponinNfluo3_wryrscaling_wtimelag_wtimecourse.xml'
 iCa = 2.0e-15
 # Initial conditions
@@ -95,19 +108,6 @@ comm = MPI.COMM_WORLD
 
 # G e t   m e s h   r e s o u r c e s
 # -----------------------------------
-resourceLinks = {
-    "Combined_8Sarc_1319kNodes_node.h5" : "https://www.dropbox.com/s/mid02d7u8anpll4/Combined_8Sarc_1319kNodes_node.h5?dl=1",
-    "Combined_8Sarc_1319kNodes_elem.h5" : "https://www.dropbox.com/s/nkx1z7n3woh75a9/Combined_8Sarc_1319kNodes_elem.h5?dl=1",
-    "Combined_8Sarc_1436kNodes_elem.h5" : "https://www.dropbox.com/s/7lmn3igzyzbk5bf/Combined_8Sarc_1436kNodes_elem.h5?dl=1",
-    "Combined_8Sarc_1436kNodes_node.h5" : "https://www.dropbox.com/s/j3vldx5liqqgxy1/Combined_8Sarc_1436kNodes_node.h5?dl=1",
-    "Cyto_8Sarc_1319kNodes_elem.h5" : "https://www.dropbox.com/s/redc6z8qsv35lwb/Cyto_8Sarc_1319kNodes_elem.h5?dl=1",
-    "Cyto_8Sarc_1319kNodes_node.h5" : "https://www.dropbox.com/s/cstdrqo0mvf7cpz/Cyto_8Sarc_1319kNodes_node.h5?dl=1",
-    "Cyto_8Sarc_1436kNodes_elem" : "https://www.dropbox.com/s/oqeu5y4iag3vye0/Cyto_8Sarc_1436kNodes_elem.h5?dl=1",
-    "Cyto_8Sarc_1436kNodes_node.h5" : "https://www.dropbox.com/s/noo5u5512npvcbc/Cyto_8Sarc_1436kNodes_node.h5?dl=1",
-    "Cyto_8Sarc_1319kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N50_1umSpacing_tausimnum_1.mat" : "https://www.dropbox.com/s/xfuntofplizmixm/Cyto_8Sarc_1319kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N50_1umSpacing_tausimnum_1.mat?dl=1",
-    "Cyto_8Sarc_1436kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N123_tausimnum_1.mat" : "https://www.dropbox.com/s/xc9p2lc6tdr87se/Cyto_8Sarc_1436kNodes_spherical_ryr_kie_wh0.05.FixedNnd_offset05_N123_tausimnum_1.mat?dl=1"
-}
-
 if mitochondria:
     meshName = 'Cyto_'
 else:
@@ -126,7 +126,7 @@ if computationalNodeNumber == 0:
     print('Checking for node file...')
     if not os.path.exists(nodeFile):
         print('Downloading node file to input directory...')
-        download_file(nodeFile, resourceLinks[fileName])
+        download_file(fileName, inputDir)
 
 # Download elem file if it doesn't already exist
 fileName = meshName + 'elem.h5'
@@ -135,7 +135,7 @@ if computationalNodeNumber == 0:
     print('Checking for element file...')
     if not os.path.exists(elemFile):
         print('Downloading element file to input directory...')
-        download_file(elemFile, resourceLinks[fileName])
+        download_file(fileName, inputDir)
 
 # Download ryr file if it doesn't already exist
 ryrFile = inputDir + ryrName
@@ -143,7 +143,7 @@ if computationalNodeNumber == 0:
     print('Checking for RyR file...')
     if not os.path.exists(ryrFile):
         print('Downloading RyR file to input directory...')
-        download_file(ryrFile, resourceLinks[ryrName])
+        download_file(ryrName, inputDir)
 
 # O u t p u t   d i r e c t o r y
 # -------------------------------
